@@ -140,9 +140,12 @@
 18. C++新式的强制类型转换包含四种（[详情](./C++强制类型转换运算符小结.md)）：
 
     - `dynamic_cast`：用于多态类的向下转换，安全但有运行时开销。
-- `static_cast`：编译时确定的类型（即非多态）转换，高效但没有运行时检查，适合类层次的向上转换和基本类型之间的转换。
+    
+    - `static_cast`：编译时确定的类型（即非多态）转换，高效但没有运行时检查，适合类层次的向上转换和基本类型之间的转换。
     - `const_cast`：用于去除 `const` 、 `volatile`和`__unsigned` 属性，需确保对象实际不是常量。
-- `reinterpret_cast`：用于任意类型之间的位模式转换，灵活但极其危险。
+    
+    - `reinterpret_cast`：用于任意类型之间的位模式转换，灵活但极其危险。
+    
 
 19. 使用`空语句`时应该加上注释，好让别人知道该语句是有意省略的。
 
@@ -249,3 +252,182 @@
 30. 定义在类内部的函数是隐式声明的`inline`函数。
 31. 启用默认构造函数的`= default`修饰符既可以和声明一起出现在类的内部，也可以作为定义出现在类的外部。和其他函数一样，如果`= default`在类内部则该默认构造函数是内联的。
 
+32. `友元`可以声明在类内的任何地方，因为它不是类的成员，不受它所在区域的访问控制级别的约束，但是为了方便阅读，**通常将`友元`集中声明在类的开始或结束前的位置。**需要注意的是，类内的`友元`声明仅仅是声明了访问权限，所以为了使用户能够调用友元函数，必须在类外部再声明一次（此时不再有`friend`了）。通常将`友元`的声明和类本身放在同一个头文件中（类的外部）。
+
+    ```cpp
+    struct X {
+        friend void f() {
+            /* 友元函数可以定义在类的内部 */
+        }
+        X() { f(); } // 错误：f还没有被声明
+        void g();
+        void h();
+    };
+    void X::g() { return f(); } // 错误：f还没有被声明
+    void f();                   // 声明那个定义在X中的函数
+    void X::h() { return f(); } // 正确：现在f的声明在作用域中了
+    ```
+
+    > 虽然许多编译器并未强制限定友元函数必须在使用之前再类的外部声明，但是为了兼容更多的编译器，最好还是再加一个友元函数的外部声明。
+
+33. 由类定义的类型名字和其他成员一样存在访问限制，可以是`public`或`private`。
+
+    ```cpp
+    class Screen {
+    public:
+        typedef std::string::size_type pos;  // pos别名具有public权限
+    private:
+        pos cursor = 0;
+        pos height = 0, width = 0;
+        std::string contents;
+    };
+    ```
+
+34. 声明内联成员函数时，`inline`关键字既可以写在类里面成员函数声明的地方，也可以写在类外部成员函数定义的地方，或者两个地方都写，但是为了方便阅读，最好是将`inline`关键字写在类外部成员函数定义的地方。`inline成员函数`和普通`inline函数`一样，我们同样也应该把它们（与相应的类一起）放在头文件中。
+
+35. `mutable`成员永远不会是`const`，即使它是`const`对象的成员。因此，一个`const成员函数`可以改变一个`mutable`成员的值。
+
+36. 当为成员变量提供类内初始值时，必须以`=`或者`{}`表示。
+37. `前向声明`是一种不完全类型，它只能在以下两种情况下使用：
+    - 定义指向类型的指针或者引用；
+    - 声明（但是不能定义）以这种类型作为参数或者返回类型的函数。
+
+38. 除了能够定义普通友元函数外，还可以定义`友元类`和`友元成员函数`，但是在定义`友元成员函数`时要注意各个部分的声明顺序。
+
+    ```cpp
+    class ClassB;  // 前向声明（因为 ClassA 需要在 ClassB 之前知道 ClassB 的存在）
+    
+    class ClassA {
+    public:
+        void showClassBPrivateData(const ClassB& b);  // ClassA 的成员函数
+    };
+    
+    class ClassB {
+    private:
+        int privateData = 42;
+    
+        // 声明 ClassA 的成员函数为友元
+        friend void ClassA::showClassBPrivateData(const ClassB& b);
+    };
+    
+    void ClassA::showClassBPrivateData(const ClassB& b) {
+        // 由于是友元函数，可以访问 ClassB 的私有成员
+        std::cout << "ClassB's private data: " << b.privateData << std::endl;
+    }
+    ```
+
+    - 首先定义`ClassA`类，其中声明`showClassBPrivateData`函数，但是不能定义它。在`showClassBPrivateData`使用`ClassB`的成员之前必须先声明`ClassB`；
+    - 接下来定义`ClassB`，包括对于`showClassBPrivateData`的友元声明；
+    - 最后定义`Clear`，此时它才可以使用`Screen`的成员。
+
+39. 编译器在处理类的定义时，分为两步：
+
+    - 首先，编译成员的声明；
+    - 直到类全部可见后才编译函数体。
+
+    正是因为成员函数体直到整个类可见后才会被处理，所以它能使用类中定义的任何名字。
+
+40. **类型名通常定义在类的开始处**，这样就能确保所有使用该类型的成员都出现在类型名的定义之后。
+
+41. `委托构造函数`：指使用它所属类的其他构造函数执行它自己的初始化过程，或者说它把自己的一些（或全部）职责委托给了其他构造函数。在委托构造函数内，成员初始值列表只有一个唯一的入口，就是类名本身。
+
+    ```cpp
+    class Person {
+    public:
+        std::string name;
+        int age;
+    
+        // 构造函数1：带有name和age参数的完全初始化
+        Person(const std::string& name, int age) : name(name), age(age) {
+            std::cout << "Person(const std::string&, int) called" << std::endl;
+        }
+    
+        // 构造函数2：仅带有name参数，age默认为0
+        Person(const std::string& name) : Person(name, 0) {  // 委托给第一个构造函数
+            std::cout << "Person(const std::string&) called" << std::endl;
+        }
+    
+        // 构造函数3：无参数，name默认为"Unknown"，age默认为0
+        Person() : Person("Unknown") {  // 委托给第二个构造函数
+            std::cout << "Person() called" << std::endl;
+        }
+    };
+    ```
+
+42. 在实际编程中，如果定义了其他构造函数，那么最好也提供一个默认构造函数。
+
+43. `转换构造函数`指的就是只接受一个实参的构造函数，它定义了从构造函数参数类型向类类型**隐式转换**的规则。需要注意的是，只准许一步类类型转换：
+
+    ```cpp
+    class Book {
+    public:
+        Book(std::string x) {
+            std::cout << "A constructor called with " << x << std::endl;
+        }
+    };
+    
+    void func(Book bk) {
+        std::cout << "func(Book) called" << std::endl;
+    }
+    
+    int main() {
+        string s = "CODE";
+        func(s);  // 正确：从string到Book只需一步隐式转换
+        
+        // func("CODE");  // 错误：这里需要两步转换
+        // 1. 从const char* 到string
+        // 2. 从string到Book
+    }
+    ```
+
+44. 当需要阻止隐式转换时，可以在`转换构造函数`前面加上`explicit`关键字。需要注意的是，`explicit`关键字只对一个实参的构造函数有效。另外，当`explicit`关键字声明构造函数时，它将**只能以直接初始化的形式使用**，而且编译器将不会再自动转换过程中使用该构造函数（但是可以显式地强制转换）。
+
+    ```cpp
+    class Book {
+    public:
+        explicit Book(std::string x) {
+            std::cout << "A constructor called with " << x << std::endl;
+        }
+    };
+    
+    void func(Book bk) {
+        std::cout << "func(Book) called" << std::endl;
+    }
+    
+    int main() {
+        // func(string("CODE"));  // 错误：explicit修饰的构造函数不能用于隐式转换
+        func(static_cast<Book>(string("CODE"))); // 正确：显式强制类型转换
+    }
+    ```
+
+45. `字面值常量类`允许定义更复杂的数据结构，并将其用于 `constexpr` 表达式中，这使得它们非常适合用于编译期的计算或常量初始化。这在诸如元编程、编译期优化等场景下非常有用。
+
+46. 类的静态成员（[详情](./C++类的静态成员知识小结.md)）：
+
+    - 静态成员（变量和函数）是类级别的，不属于具体的对象。
+    - 静态成员变量需要在类外定义，并且可以通过类名访问，无需实例化对象;
+    - 静态成员函数只能访问静态成员，不能访问非静态成员。
+    - 静态成员通常用于存储类的全局数据或者提供与对象无关的功能。
+
+47.  定义类成员时，当类名出现后，类名之后的内容都属于类的作用域，故可省略类名。
+
+    ```cpp
+    class Book {
+        typedef std::string::size_type pos;
+    public:
+        Book(pos _n = 0);
+        static double initCnt();
+    private:
+        pos n;
+        string title;
+        static double cnt;
+    };
+    
+    double Book::cnt = initCnt();  // initCnt省略了"Book::"
+    
+    Book::Book(pos _n) : n(_n) {  // pos省略了"Book::"
+        cout << "A constructor called with " << _n << std::endl;
+    }
+    ```
+
+    
