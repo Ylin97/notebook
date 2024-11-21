@@ -127,6 +127,70 @@
           auto f = [a] () mutable { return a = 100; }; // 必须在参数列表后面使用mutable，否则会编译错误。另外，在使用mutable时，空参数列表的()也不能省略}
     ```
 
+12. `std::bind`用于创建一个函数对象，它可以绑定函数的部分参数，从而创建一个新的可调用对象。它主要有下面几种用法：
+
+    - 绑定部分参数
+    - 调整参数顺序
+    - 绑定成员函数和成员变量（需要用的**成员函数指针**和**成员变量指针**）
+
+    ```cpp
+    // bind实际上是一个函数封装器，auto f1 = bind(print, x, _1); 可以用下面的伪代码进行理解:
+    // void f1(_1) {
+    //    auto x2 = x; // x的值被拷贝到x2
+    //    print(x2, _1);
+    // }
+    //
+
+    /// 绑定部分参数，适用于原函数部分参数已确定，不需要外部输入的场合 ///
+    void print(int a, int b) { cout << a << ", " << b << endl; }
+
+    void func1(int x = 5) {
+      auto f1 = bind(print, _1, 3); // 将print的第二个参数绑定为定值3，而它的第一个参数通过调用f1时传递
+      auto f2 = bind(print, x, _1); // 将print的第一个参数绑定为变量x，而它的第二个参数通过调用f2时传递
+
+      f1(1); // 输出：1, 3
+      f2(2); // 输出：5, 2 (假设外部直接调用func1())
+    }
+
+    /// 调整参数顺序 ///
+    void func2() {
+      auto f = bind(print, _2, _1); // f与print的参数顺序是相反的
+    }
+
+    /// 绑定成员函数与成员变量，这里需要用到 成员函数指针 和 成员变量指针 ///
+    class MyClass {
+    public:
+      int value = 42;
+      void print(int x) const {
+          cout << "Value: " << x << endl;
+      }
+    }
+
+    void func3() {
+      MyClass obj;
+      // 绑定成员函数，&MyClass::print 表示获取成员函数的地址，它返回一个成员函数指针
+      auto bound_print1 = bind(&MyClass::print, &obj, _1);
+      auto bound_print2 = bind(&MyClass::print, _1, _2);// _1必须是MyClass的对象
+      // 绑定成员变量，&MyClass::value 表示获取成员变量的地址，它返回一个成员变量指针
+      auto bound_value1 = bind(&MyClass::value, &obj);
+      auto bound_value2 = bind(&MyClass::value, _1);// _1必须是MyClass的对象
+
+      bound_print1(3); // 输出：Value: 3
+      bound_print2(4); // 输出：Value: 4
+      // 注意bind绑定成员变量时生成的可调用对象，在调用时返回的是成员变量的值！
+      cout << bound_value1() << endl; // 输出：42
+      cout << bound_value2() << endl; // 输出：42
+    }
+    ```
+
+    默认情况下，`bind`的那些不是占位符的参数被拷贝到`bind`返回的可调用对象中，如果想要采用引用方式绑定，则必须使用`ref`函数：
+
+    ```cpp
+    for_each(words.begin(), words.end(), bind(print, ref(os), _1, ' '));
+    ```
+
+    `std::bind`在需要部分应用函数参数或封装可调用对象时非常有用，但在现代C++开发中，其使用频率逐渐被`lambda`表达式替代。
+
 12. 头文件`iterator`中定义了额外几种迭代器：插入迭代器、流迭代器、反向迭代器和移动迭代器。【[详情](./C++迭代器小结.md)】
 
     - **插入迭代器**：它们被绑定到一个容器上，可用来向容器插入元素。

@@ -204,10 +204,9 @@ int main() {
 
 - **读写支持**：支持读取和修改元素值。
 
-- 操作支持：
-
+- **操作支持**：
   - 支持随机偏移访问：`operator+`, `operator-`, `operator[]`。
-- 支持比较操作：`operator<`, `operator>` 等。
+  - 支持比较操作：`operator<`, `operator>` 等。
 
 #### 常用算法:
 
