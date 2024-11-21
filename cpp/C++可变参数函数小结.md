@@ -3,10 +3,11 @@
 在C++中，编写可变参数（variadic functions）有几种常用的方法，主要分为传统的C风格和现代C++的方式。以下是主要方法的总结：
 
 ### 1. 使用 C 风格的可变参数 (`<cstdarg>`):
-C++继承了C语言中的可变参数机制，使用头文件`<cstdarg>`来处理。这种方法通过`va_list`、`va_start`、`va_arg`和`va_end`宏来访问参数。它无外乎以下两种形式：
+C++继承了C语言中的可变参数机制，使用头文件`<cstdarg>`来处理。这种方法通过`va_list`、`va_start`、`va_arg`和`va_end`宏来访问参数。下面是几个宏的解释：
 
-- `void foo(parm_list, ...)`;
-- `void foo(...)`
+- `va_start(ap, last_arg)`：初始化可变参数列表。`ap` 是一个 `va_list` 类型的变量，`last_arg` 是最后一个固定参数的名称（也就是可变参数列表之前的参数）。该宏将 `ap` 指向可变参数列表中的第一个参数。
+- `va_arg(ap, type)`：获取可变参数列表中的下一个参数。`ap` 是一个 `va_list` 类型的变量，`type` 是下一个参数的类型。该宏返回类型为 `type` 的值，并将 `ap` 指向下一个参数。
+- `va_end(ap)`：结束可变参数列表的访问。`ap` 是一个 `va_list` 类型的变量。该宏将 `ap` 置为 `NULL`。
 
 **示例：**
 
