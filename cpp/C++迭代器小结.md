@@ -78,7 +78,7 @@ std::cout << accumulate(in, eof, 0) << endl;
 >
 > 3. 流迭代器是一种方便的工具，它们使得某些类型的I/O操作更加简洁，但它们并不提供性能上的优势。在决定是否使用流迭代器时，应该考虑代码的可读性、可维护性和特定场景下的需求。
 
-### 3.反向迭代器
+### 3. 反向迭代器
 
 它们向后而不是向前移动，除了`forward_list`之外的标准库容器都有反向迭代器。
 
@@ -87,13 +87,13 @@ std::cout << accumulate(in, eof, 0) << endl;
 ```cpp
 string line("FIRST,MIDDLE,LAST");
 
-auto rcomma = find(line.crbegin(), line.cend(), ',');
-cout << string(line.crbegin(), rcomma) << endl;; // 将打印 TSAL!
-// 如果要正向打印，必须使用base成员函数。其中，rcomma和rcomma.base()指向不同的元素！
+auto rcomma = find(line.crbegin(), line.crend(), ',');
+cout << string(line.crbegin(), rcomma) << endl;; // 将打印 TSAL
+// 如果要正向打印，必须使用base成员函数。其中，rcomma和rcomma.base()指向不同的元素
 cout << string(rcomma.base(), line.cend()) << endl;
 ```
 
-### 4.移动迭代器
+### 4. 移动迭代器
 
 它们通过移动语义来移动其中的元素，即当使用移动迭代器时，元素会被“移动”而不是被“复制”，这样可以提高效率，特别是在处理大型对象或资源密集型对象时。
 
