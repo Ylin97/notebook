@@ -1,0 +1,8 @@
+# 其他文本自动处理
+* text=auto
+# 所有 Markdown 文件统一 LF
+*.md text eol=lf
+# 二进制文件不做换行处理
+*.svg -text
+*.pdf -text
+
