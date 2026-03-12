@@ -543,16 +543,29 @@ Pending Demands:
 
 #### 4）加载模型
 
+**设置必要的环境变量：**
+
+```shell
+# 关闭 Pytorch 可扩展显存段避免显存分配 bug，因为我们的显存已经快被占满了，所以取消扩展显存段的显存管理方式 
+# （该方式会对显存段进行对齐，这样虽然能提高显存访问效率，但是可能会占用更多的显存）
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:False 
+export VLLM_USE_V1=1 # 使用新 scheduler 提升吞吐
+```
+
+**启动模型：**
+
 ```shell
 python -m vllm.entrypoints.openai.api_server \
     --model /data/models/marksverdhei/GLM-4.7-Flash-FP8 \
     --served-model-name GLM-4.7-Flash-FP8 \
     --tensor-parallel-size 2 \
     --distributed-executor-backend ray \
-    --max-model-len 32768 \
+    --max-model-len 65536 \
+    --max_num_batched_tokens 8192 \
     --max-num-seqs 2 \
-    --gpu-memory-utilization 0.9 \
+    --gpu-memory-utilization 0.92 \
     --swap-space 20 \
+    --seed 3407 \
     --host 0.0.0.0 \
     --port 8000 \
     #--kv-cache-dtype fp8 \
@@ -572,12 +585,14 @@ python -m vllm.entrypoints.openai.api_server \
 > | `--tensor-parallel-size` | 张量并行数量，即模型会被拆分到 2 张 GPU 上运行 |
 > | `--distributed-executor-backend` | 指定分布式执行框架 |
 > | `--max-model-len` | 模型最大上下文长度，prompt + generation ≤ 32768 tokens |
+> | `--max_num_batched_tokens` | 一次调度 step 最多允许处理多少 token（所有请求加起来），通常设置为  max-model-len / 8 |
 > | `--max-num-seqs` | 最大并发序列数量，即同时支持多少条请求 |
 > | `--gpu-memory-utilization` | 限制 GPU 显存使用比例 |
-> | `--swap-space` | CPU 内存作为 KV Cache 的溢出空间 |
+> | `--swap-space` | CPU 内存作为 KV Cache 的溢出空间，如果报错请去掉 |
+> | `--seed` | 控制随机数种子，让模型推理结果可复现（使用采样策略时才有用，即 `temperature` 或 `top_p` 大于零） |
 > | `--host` | API 监听地址（127.0.0.1 仅本地访问，0.0.0.0 所有机器都能访问） |
 > | `--port` | API 服务端口 |
-> | `--kv-cache-dtype` | FP8 加速，需要显卡支持，RTX 5090 最新的驱动已支持 |
+> | `--kv-cache-dtype` | FP8 加速，需要显卡支持，RTX 5090 最新的驱动已支持，但是 vllm 还不支持 `MLA Attention` |
 > | `--enable-auto-tool-choice` | 开启自动工具选择，开启后模型可以自动决定是否调用工具，而不是强制调用 |
 > | `--tool-call-parser` | 指定工具调用解析器 |
 > | `--reasoning-parser` | 指定推理内容解析器 |
