@@ -549,7 +549,6 @@ Pending Demands:
 # 关闭 Pytorch 可扩展显存段避免显存分配 bug，因为我们的显存已经快被占满了，所以取消扩展显存段的显存管理方式 
 # （该方式会对显存段进行对齐，这样虽然能提高显存访问效率，但是可能会占用更多的显存）
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:False 
-export VLLM_USE_V1=1 # 使用新 scheduler 提升吞吐
 ```
 
 **启动模型：**
