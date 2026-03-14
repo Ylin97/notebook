@@ -560,7 +560,7 @@ python -m vllm.entrypoints.openai.api_server \
     --tensor-parallel-size 2 \
     --distributed-executor-backend ray \
     --max-model-len 65536 \
-    --max_num_batched_tokens 8192 \
+    --max-num-batched-tokens 8192 \
     --max-num-seqs 2 \
     --gpu-memory-utilization 0.92 \
     --swap-space 20 \
@@ -584,7 +584,7 @@ python -m vllm.entrypoints.openai.api_server \
 > | `--tensor-parallel-size` | 张量并行数量，即模型会被拆分到 2 张 GPU 上运行 |
 > | `--distributed-executor-backend` | 指定分布式执行框架 |
 > | `--max-model-len` | 模型最大上下文长度，prompt + generation ≤ 32768 tokens |
-> | `--max_num_batched_tokens` | 一次调度 step 最多允许处理多少 token（所有请求加起来），通常设置为  max-model-len / 8 |
+> | `--max-num-batched-tokens` | 一次调度 step 最多允许处理多少 token（所有请求加起来），通常设置为  max-model-len / 8 |
 > | `--max-num-seqs` | 最大并发序列数量，即同时支持多少条请求 |
 > | `--gpu-memory-utilization` | 限制 GPU 显存使用比例 |
 > | `--swap-space` | CPU 内存作为 KV Cache 的溢出空间，如果报错请去掉 |
